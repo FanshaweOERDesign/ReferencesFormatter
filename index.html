@@ -1,0 +1,368 @@
+<!doctype HTML>
+<!--
+MIT License
+
+Copyright (c) 2023 Jason Benoit
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>References Formatter</title>
+        <meta author="Jason Benoit">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!--[if lt IE 9]>
+            <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+        <link rel="shortcut icon" href="images/oer_logo.ico" />
+        <script>
+            function copy(id) {
+                let textarea = document.getElementById(id).value;
+                navigator.clipboard.writeText(textarea);
+                
+                document.getElementById("copyRes").innerHTML = "Copied!";
+            };
+            
+            function formatFromTextInput(){
+                formatFromText(document.getElementById("inputText").value);
+            }
+            
+            function formatFromFile() {
+                let fileText = sessionStorage.getItem("inputFileText");
+                formatFromText(fileText);
+            }
+            
+            function sendToOutputTab(list){
+                
+                document.getElementById("tab-3").click();
+                let outputTxt = document.getElementById("output");
+                outputTxt.value = "";
+                for (let ref of list){
+                    
+                    outputTxt.value += ref + '\n';
+                }
+                document.getElementById("outputCopyBtn").style.visibility = "visible";
+            }
+            
+            function formatFromText(rawText) {
+                
+                rawText = rawText.split(/\r?\n/);
+                let lineSet = new Set();
+                for (let line of rawText){
+                    
+                    if (line.length === 0){
+                        continue;
+                    }
+                    
+                    let indentTagIdx = Math.max(line.indexOf("<p class='hanging-indent'>"), line.indexOf("<p class=\"hanging-indent\">"));
+                    
+                    if (indentTagIdx === 0){
+                        line = line.substr(line.indexOf('>') + 1);
+                        line = line.substr(0, line.lastIndexOf('<'));
+                    }
+                    
+                    lineSet.add(line);
+                }
+                
+                let sorted = Array.from(lineSet).sort((a,b)=>{ return a.toLowerCase() < b.toLowerCase;});
+                
+                for (let i = 0; i < sorted.length; i++){
+                    
+                    sorted[i] = "<p class='hanging-indent'>" + sorted[i] + "</p>";
+                }
+                
+                sendToOutputTab(sorted);
+                
+            }
+            
+            function readFile(file){
+                let reader = new FileReader();
+                reader.onload = function(event) {
+                          
+                          // Load the file into session storage
+                          sessionStorage.setItem("inputFileText", event.target.result);
+                      }
+                      reader.readAsText(file, 'UTF-8');
+            }
+            
+            function dropHandler(ev) {
+              console.log("File(s) dropped");
+
+              // Prevent default behavior (Prevent file from being opened)
+              ev.preventDefault();  
+              sessionStorage.removeItem("inputFileText");
+              if (ev.dataTransfer.items) {
+                  let item = ev.dataTransfer.items[0];
+                  if (item.kind === "file") {
+                    const file = item.getAsFile();
+                    readFile(file); 
+                  }
+                  
+              } else {
+                // Use DataTransfer interface to access the file(s)
+                readFile(ev.dataTransfer.files[0]);
+                  
+              }
+            }
+                
+            function dragOverHandler(ev) {
+              console.log("File(s) in drop zone");
+
+              // Prevent default behavior (Prevent file from being opened)
+              ev.preventDefault();
+            }
+            
+            function fileUploader() {
+                
+                var input = document.createElement('input');
+                input.type = 'file';
+
+                input.onchange = e => { 
+
+                   // getting a hold of the file reference
+                   var file = e.target.files[0]; 
+
+                   // setting up the reader
+                   var reader = new FileReader();
+                   reader.readAsText(file,'UTF-8');
+
+                   // here we tell the reader what to do when it's done reading...
+                   reader.onload = readerEvent => {
+                      var content = readerEvent.target.result; // this is the content!
+                      sessionStorage.setItem("inputFileText", content);
+                   }
+
+                }
+
+                input.click();
+            }
+            
+            var init = function(){
+                
+                var txtAreas = document.getElementsByClassName("userText");
+                Array.prototype.forEach.call(txtAreas, (e)=>{e.onfocus = ()=>{e.select();};});
+                document.getElementById("outputCopyBtn").style.visibility = "hidden";
+                document.getElementById("outputCopyBtn").addEventListener('click', ()=>{copy("output");});
+                sessionStorage.removeItem("inputFileText");
+                
+            };
+		
+        </script>
+        <style>
+            * {
+              box-sizing: border-box;
+            }
+
+            .wrapper {
+              max-width: 50rem;
+              width: 100%;
+              margin: 0 auto;
+            }
+            .tabs {
+              position: relative;
+                width: 80%;
+                left: 50%;
+                transform: translateX(-50%);
+                border-radius: 25px;
+              height: 14.75rem;
+            }
+            .tabs::before,
+            .tabs::after {
+              content: "";
+              display: table;
+            }
+            .tabs::after {
+              clear: both;
+            }
+            .tab {
+              float: left;
+            }
+            .tab-switch {
+              display: none;
+            }
+            .tab-label {
+                border-top-left-radius: 15px;
+                border-top-right-radius: 15px;
+              position: relative;
+              display: block;
+              line-height: 2.75em;
+              height: 3em;
+              padding: 0 1.618em;
+              background: #e2231a;
+              border-right: 0.125rem solid #c50603;
+              color: #fff;
+              cursor: pointer;
+              top: 0;
+              transition: all 0.25s;
+            }
+            .tab-label:hover {
+              top: -0.25rem;
+              transition: top 0.25s;
+            }
+            .tab-content {
+                border-top-right-radius: 15px;
+                border-bottom-left-radius: 15px;
+                border-bottom-right-radius: 15px;
+              height: 18rem;
+                width: 100%;
+              position: absolute;
+              z-index: 1;
+              top: 2.75em;
+              left: 0;
+              padding: 1.618rem;
+              background: #fff;
+              color: #2c3e50;
+              border-bottom: 0.25rem solid #bdc3c7;
+              opacity: 0;
+              transition: all 0.35s;
+            }
+            .tab-switch:checked + .tab-label {
+              background: #fff;
+              color: #2c3e50;
+              border-bottom: 0;
+              border-right: 0.125rem solid #fff;
+              transition: all 0.35s;
+              z-index: 1;
+              top: -0.0625rem;
+            }
+            .tab-switch:checked + label + .tab-content {
+              z-index: 2;
+              opacity: 1;
+              transition: all 0.35s;
+            }
+            body {
+                min-width: 755px;
+                background-image: url(images/fanshawe_wallpaper.jpg);
+                
+                font-family: Arial, sans-serif;
+            }
+            
+            h1 {
+                font-family: monospace, sans-serif;
+            }
+            
+            .wrap {
+                width: 60%;
+                height: 77vh;
+                text-align: center;
+                /*background-color: #f7f5f5;*/
+                background-color: #dfdfdf;
+                display: inline-block;
+                text-align: center;
+                margin-left: 20%;
+                margin-top: 1vh;
+                border-radius: 25px;
+            }
+            
+            .child {
+                font-size: 1rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .userText {
+                width: 98%;
+                height: 30vh;
+                padding: 1%;
+                
+            }
+            
+            button {
+                font-size: 1.5rem;
+            }
+            
+            footer{
+                text-align: center;
+                color: #fff;
+                margin-top: 1rem;
+            }
+            
+            footer a {
+                
+                color: white;
+            }
+            
+            #logo {
+                width: 74px;
+            }
+            
+            #logo-div{
+                text-align: center;
+                margin-top: 2vh;
+            }
+            
+            #resultTxtCopyRes{
+                margin-left: 1rem;
+            }
+            
+            #drop_zone {
+              border: 2px dashed gray;
+                border-radius: 15px;
+                padding: 5px;
+              width: 250px;
+              height: 150px;
+                margin-left: 50%;
+                margin-top: 1.5rem;
+                transform: translateX(-50%);
+            }
+
+        </style>
+    </head>
+    <body onload="init();">
+        
+        <div class="wrap">
+            <h1>References Formatter</h1>
+            <div class="wrapper">
+          <div class="tabs">
+            <div class="tab">
+              <input type="radio" name="css-tabs" id="tab-1" checked class="tab-switch">
+              <label for="tab-1" class="tab-label">Add List</label>
+              <div class="tab-content">
+                  <textarea id="inputText" class="userText">Paste reference list HTML here. Do NOT paste code for entire page -- only references.</textarea>
+                  <button id="buildFromText" onclick="formatFromTextInput();" style="margin-top: 1rem;">Format!</button>
+                </div>
+            </div>
+            <div class="tab">
+              <input type="radio" name="css-tabs" id="tab-2" class="tab-switch">
+              <label for="tab-2" class="tab-label">Upload File</label>
+              <div class="tab-content"><div id="drop_zone" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);" onclick="fileUploader();">
+                <p style="text-align: center; margin-top: 3rem;">Drag .txt files here or click to browse</p>
+            </div>
+                <button id="buildFromFile" onclick="formatFromFile();" style="margin-top: 1rem;">Format!</button></div>
+            </div>
+              <div class="tab">
+              <input type="radio" name="css-tabs" id="tab-3" class="tab-switch">
+              <label for="tab-3" class="tab-label">Results</label>
+              <div class="tab-content"><textarea id="output" class="userText"></textarea> 
+                  <button id="outputCopyBtn" class="divCenter">Copy Output to Clipboard</button>
+                  <div id="copyRes"></div>
+                  </div>
+            </div>
+          </div>
+        </div>
+        </div>
+        <div id="logo-div">
+            <img id= "logo" src="images/oer_logo.png" />
+        </div>       
+        <footer>
+            <div>References Formatter by Jason Benoit and the Fanshawe OER Design Studio is open source software made available under the <a href="https://choosealicense.com/licenses/mit/">MIT License</a>.
+            </div>
+        </footer>
+    </body>
+</html>
