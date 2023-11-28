@@ -14,4 +14,4 @@ If you are not using Pressbooks, the hanging indent effect can be achieved by ad
   }
 ```
 
-Visit the active GitHub Page to use online or download and run locally in your browser -- no server required!
+Visit the [active GitHub Page](https://fanshaweoerdesign.github.io/ReferencesFormatter/) to use online or download and run locally in your browser -- no server required!
