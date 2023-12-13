@@ -81,8 +81,7 @@ SOFTWARE.
                     lineSet.add(line);
                 }
                 
-                let sorted = Array.from(lineSet);
-                sorted = sorted.sort((a,b)=>{ 
+                let sorted = Array.from(lineSet).sort((a,b)=>{ 
                     if (a.toLowerCase() < b.toLowerCase()){
                         return -1;
                     }
