@@ -87,26 +87,45 @@ SOFTWARE.
                     
                     function formatTextForSorting(text){
                 
-                while (text.charAt(0).match(/[A-Za-z0-9]/) == undefined){
+                        while (text.charAt(0).match(/[A-Za-z0-9]/) == undefined){
                         
-                        if (text.charAt(0) == '<'){
-                        text = text.substr(text.indexOf('>') + 1);
+                            if (text.charAt(0) == '<'){
+                            text = text.substr(text.indexOf('>') + 1);
                             break;
-                    }
+                        }
                        text = text.substr(1); 
                     }
                 
-                text = text.toLowerCase();
-                if (text.indexOf("the ") == 0 || text.indexOf("a ") == 0 || text.indexOf("an ") == 0){
+                    text = text.toLowerCase();
+                    if (text.indexOf("the ") == 0 || text.indexOf("a ") == 0 || text.indexOf("an ") == 0){
                     
-                    return text.substr(text.indexOf(" ")+1);
-                }
+                        return text.substr(text.indexOf(" ")+1);
+                    }
                 
-                return text;
-            }
+                        return text;
+                    }
+                    
+                    if (a.substr(0, a.indexOf(')')) == b.substr(0, b.indexOf(')'))){
+                        
+                        let openBracketIdx = a.indexOf('(');
+                        let closeBracketIdx = a.indexOf(')');
+                        
+                        if (openBracketIdx >= 0){
+                            let date = a.substr(openBracketIdx + 1,  closeBracketIdx - openBracketIdx - 1);
+                            
+                            if (date === "n.d." || (date.match(/[0-9]/) && date.length == 4)){
+                                
+                                a = a.substr(closeBracketIdx + 1);
+                                b = b.substr(closeBracketIdx + 1);
+                            }
+                        }
+                        
+                    }
                     
                     a = formatTextForSorting(a);
                     b = formatTextForSorting(b);
+                    
+                    
                         
                     if (a < b){
                         return -1;
