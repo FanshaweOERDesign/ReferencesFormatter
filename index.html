@@ -82,6 +82,26 @@ SOFTWARE.
                 }
                 
                 let sorted = Array.from(lineSet).sort((a,b)=>{ 
+                    
+                    while (a.charAt(0).match(/[A-Za-z0-9]/) == undefined){
+                        
+                        if (a.charAt(0) == '<'){
+                        a = a.substr(a.indexOf('>') + 1);
+                            break;
+                    }
+                       a = a.substr(1); 
+                    }
+                    
+                    
+                    while (b.charAt(0).match(/[A-Za-z0-9]/) == undefined){
+                        if (b.charAt(0) == '<'){
+                        b = b.substr(b.indexOf('>') + 1);
+                            break;
+                    }
+                        b = b.substr(1);
+                    }
+                    
+                        
                     if (a.toLowerCase() < b.toLowerCase()){
                         return -1;
                     }
@@ -90,8 +110,6 @@ SOFTWARE.
                     }
                     return 0;
                 });
-                
-                console.log(sorted);
                 
                 for (let i = 0; i < sorted.length; i++){
                     
