@@ -118,7 +118,7 @@ SOFTWARE.
                 
                 let startSection = citation.substr(0, titleStartIdx);
                 let title = citation.substr(titleStartIdx, titleEndIdx - titleStartIdx);
-                let webURLs = citation.match(/(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]{2,})?(\/[a-zA-Z0-9]+)*/);
+                let webURLs = citation.match(/(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]{2,})?(\/.+)*/);
                 
                 // Title already hyperlinked or there are no weblinks
                 if (title.indexOf("<a href") === 0 || (webURLs && webURLs.size === 0)){
