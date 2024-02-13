@@ -33,6 +33,7 @@ SOFTWARE.
         <![endif]-->
         <link rel="shortcut icon" href="images/oer_logo.ico" />
         <script>
+            
             function copy(id) {
                 let textarea = document.getElementById(id).value;
                 navigator.clipboard.writeText(textarea);
@@ -61,6 +62,101 @@ SOFTWARE.
                 document.getElementById("outputCopyBtn").style.visibility = "visible";
             }
             
+            function getLastAngleBracket(str, startPos){
+                
+                if (str.charAt(startPos) !== '<'){
+                    return -1;
+                }
+                
+                let openTag = "";
+                while (str.charAt(startPos) !== '>'){
+                   
+                    openTag += str.charAt(startPos);
+                    startPos++;
+                       
+                }
+                openTag += str.charAt(startPos);
+                
+                let closeTag = openTag.substr(0, 1) + "/" + openTag.substr(1);
+                let endIdx = str.indexOf(closeTag, startPos);
+                return endIdx + closeTag.length;
+            }
+            
+            function formatHyperlinks(citation){
+                
+                let dateEnd = citation.match(/[0-9]\)\./);
+                let titleStartIdx = -1;
+                
+                if (!dateEnd){
+                    titleStartIdx = citation.indexOf("(n.d.).") + 7;
+                }
+                else {
+                    titleStartIdx = citation.indexOf(dateEnd[0]) + 3;
+                }
+                
+                // Not in APA format
+                if (titleStartIdx < 0){
+                    return citation;
+                }
+
+                while (citation.charAt(titleStartIdx) === ' '){
+                    titleStartIdx++;
+                }
+                
+                let titleEndIdx;
+                
+                // Need to include html tags
+                if (citation.charAt(titleStartIdx) === '<'){
+                    titleEndIdx = getLastAngleBracket(citation, titleStartIdx);
+                    if (citation.charAt(titleEndIdx + 1) === '.'){
+                        titleEndIdx++;
+                    }
+                }
+                else {
+                    titleEndIdx = citation.indexOf(".", titleStartIdx);
+                }
+                
+                let startSection = citation.substr(0, titleStartIdx);
+                let title = citation.substr(titleStartIdx, titleEndIdx - titleStartIdx);
+                let webURLs = citation.match(/(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]{2,})?(\/[a-zA-Z0-9]+)*/);
+                
+                // Title already hyperlinked or there are no weblinks
+                if (title.indexOf("<a href") === 0 || (webURLs && webURLs.size === 0)){
+                    return citation;
+                }
+                
+                let anchorStartIdx = citation.indexOf("<a href", titleEndIdx);
+                
+                // Replace anchor link with plain text version of url
+                while (anchorStartIdx >= 0){
+                    
+                    let anchorEndIdx = citation.indexOf("</a>", anchorStartIdx) + 4;
+                    let endQuoteSingleIdx = citation.indexOf("'", anchorStartIdx + 9);
+                    if (endQuoteSingleIdx < 0){
+                        endQuoteSingleIdx = Number.MAX_VALUE;
+                    }
+                    let endQuoteDoubleIdx = citation.indexOf('"', anchorStartIdx + 9);
+                    if (endQuoteDoubleIdx < 0){
+                        endQuoteDoubleIdx = Number.MAX_VALUE;
+                    }
+                    let endQuoteIdx = (endQuoteDoubleIdx < endQuoteSingleIdx ? endQuoteDoubleIdx : endQuoteSingleIdx);
+                    let address = citation.substr(anchorStartIdx + 9, endQuoteIdx - (anchorStartIdx + 9));
+                    citation = citation.substr(0, anchorStartIdx) + address + citation.substr(anchorEndIdx);
+                    anchorStartIdx = citation.indexOf("<a href", titleEndIdx);
+                }
+                
+                // Apply hyperlink to the title
+                if (webURLs){
+                    title = "<a href='" + webURLs[0]  + "'>" + title + "</a>";
+                }
+                
+                citation = startSection + title + citation.substr(titleEndIdx); 
+                if (citation.charAt(citation.length - 1) != '.'){
+                    citation += '.';
+                }
+                
+                return citation;
+            }
             
             
             function formatFromText(rawText) {
@@ -124,8 +220,7 @@ SOFTWARE.
                     
                     a = formatTextForSorting(a);
                     b = formatTextForSorting(b);
-                    
-                    
+                                       
                         
                     if (a < b){
                         return -1;
@@ -138,11 +233,11 @@ SOFTWARE.
                 
                 for (let i = 0; i < sorted.length; i++){
                     
-                    sorted[i] = "<p class='hanging-indent'>" + sorted[i] + "</p>";
+                    
+                    sorted[i] = "<p class='hanging-indent'>" + formatHyperlinks(sorted[i]) + "</p>";
                 }
                 
-                sendToOutputTab(sorted);
-                
+                sendToOutputTab(sorted);              
             }
             
             function readFile(file){
@@ -227,6 +322,7 @@ SOFTWARE.
               max-width: 50rem;
               width: 100%;
               margin: 0 auto;
+             position: relative;
             }
             .tabs {
               position: relative;
@@ -273,7 +369,7 @@ SOFTWARE.
                 border-top-right-radius: 15px;
                 border-bottom-left-radius: 15px;
                 border-bottom-right-radius: 15px;
-              height: 18rem;
+              height: 20rem;
                 width: 100%;
               position: absolute;
               z-index: 1;
@@ -313,7 +409,8 @@ SOFTWARE.
             
             .wrap {
                 width: 60%;
-                height: 77vh;
+                /*height: 77vh;*/
+                height: 500px;
                 text-align: center;
                 /*background-color: #f7f5f5;*/
                 background-color: #dfdfdf;
@@ -363,10 +460,6 @@ SOFTWARE.
             #resultTxtCopyRes{
                 margin-left: 1rem;
             }
-
-	    #copyRes {
-		margin-top: 1rem;
-	    }
             
             #drop_zone {
               border: 2px dashed gray;
@@ -377,6 +470,10 @@ SOFTWARE.
                 margin-left: 50%;
                 margin-top: 1.5rem;
                 transform: translateX(-50%);
+            }
+            
+            #copyRes {
+                margin-top: 0.5rem;
             }
 
         </style>
@@ -392,7 +489,7 @@ SOFTWARE.
               <label for="tab-1" class="tab-label">Add List</label>
               <div class="tab-content">
                   <textarea id="inputText" class="userText">Paste reference list HTML here. Do NOT paste code for entire page -- only references.</textarea>
-                  <button id="buildFromText" onclick="formatFromTextInput();" style="margin-top: 1rem;">Format!</button>
+                  <button id="buildFromText" onclick="formatFromTextInput();" style="margin-top: 0.5rem;">Format!</button>
                 </div>
             </div>
             <div class="tab">
@@ -406,10 +503,11 @@ SOFTWARE.
               <div class="tab">
               <input type="radio" name="css-tabs" id="tab-3" class="tab-switch">
               <label for="tab-3" class="tab-label">Results</label>
-              <div class="tab-content"><textarea id="output" class="userText"></textarea> 
+              <div class="tab-content">
+                  <textarea id="output" class="userText"></textarea> 
                   <button id="outputCopyBtn" class="divCenter">Copy Output to Clipboard</button>
                   <div id="copyRes"></div>
-                  </div>
+                </div>
             </div>
           </div>
         </div>
