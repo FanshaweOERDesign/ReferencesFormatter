@@ -169,13 +169,15 @@ SOFTWARE.
                         continue;
                     }
                     
-                    let indentTagIdx = Math.max(line.indexOf("<p class='hanging-indent'>"), line.indexOf("<p class=\"hanging-indent\">"));
+                    // Remove enclosing tag
+                    let enclosingTagIdx = line.indexOf("<");
                     
-                    if (indentTagIdx === 0){
+                    if (enclosingTagIdx === 0){
                         line = line.substr(line.indexOf('>') + 1);
                         line = line.substr(0, line.lastIndexOf('<'));
                     }
                     
+                    // Add line to the set
                     lineSet.add(line);
                 }
                 
