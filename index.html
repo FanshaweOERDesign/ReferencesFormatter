@@ -521,5 +521,19 @@ SOFTWARE.
             <div>References Formatter by Jason Benoit and the Fanshawe OER Design Studio is open source software made available under the <a href="https://choosealicense.com/licenses/mit/">MIT License</a>.
             </div>
         </footer>
+	<script>
+	// track visits
+	(async function () {
+	    try{
+		const params = new URLSearchParams({
+		  appId: window.location.pathname.split('/').filter(Boolean)[0] || 'unknown',
+		  t: Date.now()
+		});
+		await fetch(`https://apphub-analytics-server-production.up.railway.app/track.gif?${params.toString()}`); 
+	    } catch(err) {
+		console.error(err);
+	    }
+	})();
+    	</script>
     </body>
 </html>
